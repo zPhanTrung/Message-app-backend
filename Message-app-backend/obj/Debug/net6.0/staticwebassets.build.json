@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "rl55xEWHVUACILCWo8szSnZGsbHWGvbjO+igLqeiD/Y=",
+  "Source": "Message-app-backend",
+  "BasePath": "_content/Message-app-backend",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
