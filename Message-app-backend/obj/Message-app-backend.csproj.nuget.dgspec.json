@@ -4,14 +4,14 @@
     "D:\\Github\\Android\\Message-app-backend\\Message-app-backend\\Message-app-backend.csproj": {}
   },
   "projects": {
-    "D:\\Github\\Android\\Message-app-backend\\Core\\Core.csproj": {
+    "D:\\Github\\Android\\Message-app-backend\\Message-app-backend\\Message-app-backend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Github\\Android\\Message-app-backend\\Core\\Core.csproj",
-        "projectName": "Core",
-        "projectPath": "D:\\Github\\Android\\Message-app-backend\\Core\\Core.csproj",
+        "projectUniqueName": "D:\\Github\\Android\\Message-app-backend\\Message-app-backend\\Message-app-backend.csproj",
+        "projectName": "Message-app-backend",
+        "projectPath": "D:\\Github\\Android\\Message-app-backend\\Message-app-backend\\Message-app-backend.csproj",
         "packagesPath": "C:\\Users\\Trung\\.nuget\\packages\\",
-        "outputPath": "D:\\Github\\Android\\Message-app-backend\\Core\\obj\\",
+        "outputPath": "D:\\Github\\Android\\Message-app-backend\\Message-app-backend\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Trung\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -40,13 +40,23 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "dependencies": {
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[6.0.9, )"
+            },
             "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[6.0.10, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
               "target": "Package",
               "version": "[6.0.9, )"
             },
             "Microsoft.EntityFrameworkCore.Relational": {
               "target": "Package",
-              "version": "[6.0.9, )"
+              "version": "[6.0.10, )"
             },
             "Microsoft.EntityFrameworkCore.SqlServer": {
               "target": "Package",
@@ -56,82 +66,7 @@
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
               "suppressParent": "All",
               "target": "Package",
-              "version": "[6.0.9, )"
-            }
-          },
-          "imports": [
-            "net461",
-            "net462",
-            "net47",
-            "net471",
-            "net472",
-            "net48",
-            "net481"
-          ],
-          "assetTargetFallback": true,
-          "warn": true,
-          "frameworkReferences": {
-            "Microsoft.NETCore.App": {
-              "privateAssets": "all"
-            }
-          },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.400\\RuntimeIdentifierGraph.json"
-        }
-      }
-    },
-    "D:\\Github\\Android\\Message-app-backend\\Message-app-backend\\Message-app-backend.csproj": {
-      "version": "1.0.0",
-      "restore": {
-        "projectUniqueName": "D:\\Github\\Android\\Message-app-backend\\Message-app-backend\\Message-app-backend.csproj",
-        "projectName": "Message-app-backend",
-        "projectPath": "D:\\Github\\Android\\Message-app-backend\\Message-app-backend\\Message-app-backend.csproj",
-        "packagesPath": "C:\\Users\\Trung\\.nuget\\packages\\",
-        "outputPath": "D:\\Github\\Android\\Message-app-backend\\Message-app-backend\\obj\\",
-        "projectStyle": "PackageReference",
-        "configFilePaths": [
-          "C:\\Users\\Trung\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
-        ],
-        "originalTargetFrameworks": [
-          "net6.0"
-        ],
-        "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "https://api.nuget.org/v3/index.json": {}
-        },
-        "frameworks": {
-          "net6.0": {
-            "targetAlias": "net6.0",
-            "projectReferences": {
-              "D:\\Github\\Android\\Message-app-backend\\Core\\Core.csproj": {
-                "projectPath": "D:\\Github\\Android\\Message-app-backend\\Core\\Core.csproj"
-              }
-            }
-          }
-        },
-        "warningProperties": {
-          "warnAsError": [
-            "NU1605"
-          ]
-        }
-      },
-      "frameworks": {
-        "net6.0": {
-          "targetAlias": "net6.0",
-          "dependencies": {
-            "Microsoft.EntityFrameworkCore.Design": {
-              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
-              "suppressParent": "All",
-              "target": "Package",
-              "version": "[6.0.9, )"
-            },
-            "Microsoft.EntityFrameworkCore.SqlServer": {
-              "target": "Package",
-              "version": "[6.0.9, )"
-            },
-            "Microsoft.VisualStudio.Azure.Containers.Tools.Targets": {
-              "target": "Package",
-              "version": "[1.17.0, )"
+              "version": "[6.0.1, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
