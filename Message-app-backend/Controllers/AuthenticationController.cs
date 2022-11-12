@@ -1,11 +1,22 @@
-﻿using Message_app_backend.Entities;
+﻿using Message_app_backend.Dto.Auth;
+using Message_app_backend.Entities;
+using Message_app_backend.Repository;
+using Message_app_backend.Service;
+using Message_app_backend.Shared;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using StackExchange.Redis;
+using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
+using System.Runtime.Intrinsics.Arm;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 
 namespace Message_app_backend.Controllers
 {
@@ -14,59 +25,100 @@ namespace Message_app_backend.Controllers
     public class AuthenticationController : ControllerBase
     {
         public IConfiguration configuration;
-        private readonly AppDb context;
+        private JwtTokenService jwtTokenService;
+        private UserService userService;
 
-        public AuthenticationController(IConfiguration config, AppDb context)
+        public AuthenticationController(
+            IConfiguration config,
+            UserService userService,
+            JwtTokenService jwtTokenService)
         {
             configuration = config;
-            this.context = context;
+            this.userService = userService;
+            this.jwtTokenService = jwtTokenService;
         }
 
         [HttpPost]
         [Route("/auth")]
-        public async Task<IActionResult> Post(UserInfo userData)
+        public MessageResponse<AuthResponseDto> Authenticate(AuthDto authDto)
         {
-            if (userData != null && userData.UserName != null && userData.Password != null)
+            try
             {
-                var user = await GetUser(userData.UserName, userData.Password);
+                var data = jwtTokenService.Authenticate(authDto);
 
-                if (user?.UserName != null)
+                return new MessageResponse<AuthResponseDto> { Code = HttpStatusCode.OK, Data = data };
+            }
+            catch (Exception ex)
+            {
+                return new MessageResponse<AuthResponseDto> { Code = HttpStatusCode.Forbidden, Message = ex.Message };
+            }
+        }
+
+        [HttpPost]
+        [Route("/reconnect")]
+        public MessageResponse<bool> Reconnect(ReconnectDto reconnectDto)
+        {
+            try
+            {
+                var isValid = jwtTokenService.Reconnect(reconnectDto.AccessToken);
+                if (isValid)
                 {
-                    //create claims details based on the user information
-                    var claims = new[] {
-                        new Claim(JwtRegisteredClaimNames.Sub, configuration["Jwt:Subject"]),
-                        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                        new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
-                        new Claim("UserId", user.UserId.ToString()),
-                        new Claim("UserName", user.UserName),
-                    };
-
-                    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]));
-                    var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-                    var token = new JwtSecurityToken(
-                        configuration["Jwt:Issuer"],
-                        configuration["Jwt:Audience"],
-                        claims,
-                        expires: DateTime.UtcNow.AddMinutes(10),
-                        signingCredentials: signIn);
-
-                    return Ok(new { Token = new JwtSecurityTokenHandler().WriteToken(token).ToString() });
+                    return new MessageResponse<bool> { Code = HttpStatusCode.OK, Message = "Login success" };
                 }
                 else
                 {
-                    return BadRequest("Invalid credentials");
+                    return new MessageResponse<bool> { Code = HttpStatusCode.NotFound, Message = "Access token invalid" };
                 }
             }
-            else
+            catch (Exception ex)
             {
-                return BadRequest();
+                return new MessageResponse<bool> { Code = HttpStatusCode.Forbidden, Message = ex.Message };
             }
         }
 
-        private async Task<UserInfo?> GetUser(string userName, string password)
+        [HttpGet]
+        [Route("/GetAccessToken")]
+        public MessageResponse<object> GetAccessToken(string refreshToken)
         {
-            return await context.UserInfos.FirstOrDefaultAsync(u => u.UserName == userName && u.Password == password);
+            try
+            {
+                var accessToken = jwtTokenService.GetAccesToken(refreshToken);
+                if (accessToken != "")
+                {
+                    var data = new { accessToken = accessToken };
+                    return new MessageResponse<object> { Code = HttpStatusCode.OK, Data = data };
+                }
+                return new MessageResponse<object> { Code = HttpStatusCode.NotFound, Message= "Can not get access token",Data = "" };
+            }
+            catch (Exception ex)
+            {
+                return new MessageResponse<object> { Code = HttpStatusCode.Forbidden, Message = ex.Message };
+            }
+
         }
+
+        [HttpPost]
+        [Authorize]
+        [Route("/logout")]
+        public MessageResponse<bool> Logout(LogoutDto logoutDto)
+        {
+            try
+            {
+                if (jwtTokenService.Logout(logoutDto))
+                {
+                    return new MessageResponse<bool> { Code = HttpStatusCode.OK, Message = "Logout success" };
+                }
+
+                return new MessageResponse<bool> { Code = HttpStatusCode.MethodNotAllowed, Message = "Logout failed" };
+
+            }
+            catch (Exception ex)
+            {
+                return new MessageResponse<bool> { Code = HttpStatusCode.Forbidden, Message = ex.Message };
+            }
+        }
+
+
     }
 
 }
