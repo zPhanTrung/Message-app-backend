@@ -4,6 +4,7 @@ using Message_app_backend.Dto.Contacs;
 using Message_app_backend.Repository;
 using Message_app_backend.Service;
 using Message_app_backend.Shared;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -14,12 +15,15 @@ namespace Message_app_backend.Controllers
     public class ChatController : ControllerBase
     {
         ChatService chatService;
-        public ChatController(ChatService chatService)
+        RoomMemberRepository roomMemberRepository;
+        public ChatController(ChatService chatService, RoomMemberRepository roomMemberRepository)
         {
             this.chatService = chatService;
+            this.roomMemberRepository = roomMemberRepository;
         }
 
         [HttpGet]
+        [Authorize]
         [Route("[controller]/GetMessage")]
         public MessageResponse<List<MessageDto>> GetMessage(int roomId, int pageIndex, int pageSize)
         {
@@ -34,18 +38,21 @@ namespace Message_app_backend.Controllers
             }
         }
 
+
+
         [HttpGet]
-        [Route("[controller]/testDateTime")]
-        public MessageResponse<string> testDateTime()
+        [Authorize]
+        [Route("[controller]/GetRoomId")]
+        public MessageResponse<int> GetRoomId(int user1, int user2)
         {
             try
             {
-                var date = DateTime.Parse("11/12/2022 20:51:38");
-                return new MessageResponse<string> { Code = HttpStatusCode.OK, Message = "", Data = date.ToString("dd-MM-yyyy HH:mm:ss")};
+                var roomId = roomMemberRepository.FindRoomIdByUserId(user1, user2);
+                return new MessageResponse<int> { Code = HttpStatusCode.OK, Message = "", Data = roomId };
             }
             catch (Exception ex)
             {
-                return new MessageResponse<string> { Code = HttpStatusCode.NotFound, Message = "Error:" + ex.Message };
+                return new MessageResponse<int> { Code = HttpStatusCode.NotFound, Message = "Error:" + ex.Message };
             }
         }
 

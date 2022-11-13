@@ -13,6 +13,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Security.Principal;
 using Message_app_backend.RealTime.Dto;
 using StackExchange.Redis;
+using Message_app_backend.Dto.Chat;
 
 namespace Message_app_backend.RealTime
 {
@@ -51,6 +52,8 @@ namespace Message_app_backend.RealTime
 
         public override Task OnConnectedAsync()
         {
+            Console.WriteLine("on connect");
+            base.OnConnectedAsync();
             var userId = GetUserId();
 
             var db = redis.GetDatabase();
@@ -59,41 +62,43 @@ namespace Message_app_backend.RealTime
             db.StringGetDelete(key1);
             db.StringSet(key2, Context.ConnectionId);
 
-            return base.OnConnectedAsync();
+            return Task.CompletedTask;
         }
+
 
         public override Task OnDisconnectedAsync(Exception? exception)
         {
+            //base.OnDisconnectedAsync(exception);
+            //Console.WriteLine("disconnect" + Context.ConnectionId);
             var userId = GetUserId();
             var db = redis.GetDatabase();
             var key1 = "disconnectTime_" + userId.ToString();
-            var key2 = "connectionId_" + userId.ToString();
             var disconnectTime = DateTime.UtcNow.ToString();
             db.StringSet(key1, disconnectTime);
-            db.StringGetDelete(key2);
 
-            return base.OnDisconnectedAsync(exception);
+            return base.OnDisconnectedAsync(exception); ;
         }
 
-        public async Task SendMessage(string messageContent, int roomId, int userReceiveId, RoomTypeEnum roomType, string typeMessage, string time)
+        public async Task SendMessage(string messageContent, int roomId, int userReceiveId, RoomTypeEnum roomType, string messageType, string time)
         {
             //save message
             var userId = GetUserId();
             var userInfo = userInfoRepository.FindById(userId);
-            SaveMessage(messageContent, roomId, userReceiveId, typeMessage, time);
-
+            var  message = await SaveMessage(messageContent, roomId, userReceiveId, messageType, time);
+            var receiveMessageDto = new MessageDto();
             //send message
             if (roomType == RoomTypeEnum.Personal)
             {
                 var connectionId = GetConnectionIdByUserId(userReceiveId);
-                var receiveMessageDto = new ReceiveMessageDto
+                receiveMessageDto = new MessageDto
                 {
-                    MessageContent = messageContent,
-                    UserSendId = userId,
-                    RoomType = roomType,
-                    Avatar = userInfo.Avatar,
-                    DisplayName = userInfo.DisplayName,
-                    Time = time,
+                    MessageId = message.MessageId,
+                    MessageContent = message.MessageContent,
+                    UserId = message.UserId,
+                    RoomId = message.RoomId,
+                    Recall = message.Recall,
+                    MessageType = message.MessageType,
+                    SendTime = message.SendTime.ToString(),
                 };
 
                 if (connectionId != "")
@@ -108,14 +113,14 @@ namespace Message_app_backend.RealTime
                 var userIds = groupMembers.Select(e => e.UserId).ToList();
                 var connectionIds = GetConnectionIdsByUserIds(userIds);
 
-                var receiveMessageDto = new ReceiveMessageDto
+                receiveMessageDto = new MessageDto
                 {
-                    MessageContent = messageContent,
-                    UserSendId = userId,
-                    RoomType = roomType,
-                    Avatar = userInfo.Avatar,
-                    DisplayName = userInfo.DisplayName,
-                    Time = time,
+                    MessageContent = message.MessageContent,
+                    UserId = message.UserId,
+                    RoomId = message.RoomId,
+                    Recall = message.Recall,
+                    MessageType = message.MessageType,
+                    SendTime = message.SendTime.ToString(),
                 };
 
                 if (connectionIds.Count > 0)
@@ -125,10 +130,10 @@ namespace Message_app_backend.RealTime
             }
 
             // send response
-            await Clients.Clients(Context.ConnectionId).SendAsync("SendMessageResponse", new { message = messageContent, userReceiveId = userReceiveId, type = RoomTypeEnum.Personal, status = "Success" });
+            await Clients.Clients(Context.ConnectionId).SendAsync("SendMessageResponse", new { data = receiveMessageDto, status = "success" });
         }
 
-        private void SaveMessage(string messageContent, int roomId, int userReceiveId, string typeMessage, string time)
+        private async Task<Message> SaveMessage(string messageContent, int roomId, int userReceiveId, string messageType, string time)
         {
             using (var transaction = roomRepository.Database().BeginTransaction())
             {
@@ -148,6 +153,7 @@ namespace Message_app_backend.RealTime
                         };
 
                         roomMembers.AddRange(roomMembers);
+                        roomMemberRepository.CreateRange(roomMembers);
                     }
                     else
                     {
@@ -158,22 +164,26 @@ namespace Message_app_backend.RealTime
 
                     Message message = new Message
                     {
-                        RoomId = roomId,
+                        RoomId = room.RoomId,
                         UserId = GetUserId(),
                         MessageContent = messageContent,
-                        MessageType = (MessageTypeEnum)Enum.Parse(typeof(MessageTypeEnum), typeMessage),
+                        MessageType = (MessageTypeEnum)Enum.Parse(typeof(MessageTypeEnum), messageType),
                         SendTime = sendTime
                     };
 
                     messageRepository.Create(message);
 
                     transaction.Commit();
+
+                    return message;
                 }
                 catch (Exception ex)
                 {
                     transaction.Rollback();
+                    return null;
                 }
             }
+
         }
 
         //private int GetUserId()

@@ -11,7 +11,7 @@ namespace Message_app_backend.Dto.Chat
         public int? UserId { get; set; }
         public string MessageContent { get; set; }
         public bool Recall { get; set; } = false;
-        public DateTime SendTime { get; set; }
+        public string SendTime { get; set; }
         public int CallDuration { get; set; }
         public ReactionDto Reaction { get; set; }
         public MessageTypeEnum MessageType { get; set; }

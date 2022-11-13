@@ -37,7 +37,7 @@ namespace Message_app_backend.Service
                 }
             }
 
-            return messageDtos;
+            return messageDtos.OrderBy(message=>message.MessageId).ToList();
 
         }
     }

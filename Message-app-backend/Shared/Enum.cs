@@ -21,9 +21,9 @@ namespace Message_app_backend.Shared
     public enum ConnectStausEnum
     {
         [Description("Connect")]
-        Connect = 0,
+        Connect = 1,
         [Description("Disconnect")]
-        Disconnect = 1,
+        Disconnect = 0,
     }
 
     public enum MessageTypeEnum

@@ -16,18 +16,24 @@ namespace Message_app_backend.Service
         GroupChatRepository groupChatRepository;
         GroupMemberRepository groupMemberRepository;
         InviteAndRequestJoinGroupChatRepository inviteAndRequestJoinGroupChatRepository;
+        RoomMemberRepository roomMemberRepository;
         IConnectionMultiplexer redis;
+        RoomRepository roomRepository;
         IMapper mapper;
         public ContactsService(
             UserInfoRepository userInfoRepository,
             FriendRepository friendRepository,
             IMapper mapper,
             FriendRequestRepository friendRequestRepository,
+            RoomRepository roomRepository,
+            RoomMemberRepository roomMemberRepository,
             IConnectionMultiplexer redis)
         {
             this.userInfoRepository = userInfoRepository;
             this.friendRepository = friendRepository;
             this.friendRequestRepository = friendRequestRepository;
+            this.roomRepository = roomRepository;
+            this.roomMemberRepository = roomMemberRepository;
             this.redis = redis;
             this.mapper = mapper;
         }
@@ -38,35 +44,44 @@ namespace Message_app_backend.Service
 
             if (friends.Count > 0)
             {
-                var ids = friends.Select(friend => friend.UserId).ToList();
+                var ids = friends.Select(friend => friend.FriendId).ToList();
                 List<UserInfo> users = userInfoRepository.FindUserInfoByIds(ids);
 
                 foreach (var user in users)
                 {
+                    var roomId = roomMemberRepository.FindRoomIdByUserId(user.UserId, userId);
+
                     var contactsDto = new ContactsOfFriendsDto()
                     {
                         UserId = user.UserId,
-                        DisplayName = user.DisplayName
+                        DisplayName = user.DisplayName,
+                        Avatar = user.Avatar,
+                        RoomId = roomId,
+                        UserCurrentId = userId
                     };
 
                     var db = redis.GetDatabase();
                     var key = "disconnectTime_" + user.UserId.ToString();
+                    var key2 = "connectionId_" + user.UserId.ToString();
                     var value = db.StringGet(key);
+                    var connectionId = db.StringGet(key2);
 
-                    if (value == "")
+                    if (connectionId.HasValue)
                     {
                         contactsDto.ConnectStatus = ConnectStausEnum.Connect;
-                        contactsDto.DisconnectTime = "";
-                    }
-                    else if (value == "nil")
-                    {
-                        contactsDto.ConnectStatus = ConnectStausEnum.Disconnect;
-                        contactsDto.DisconnectTime = "";
                     }
                     else
                     {
                         contactsDto.ConnectStatus = ConnectStausEnum.Disconnect;
+                    }
+
+                    if (value.HasValue)
+                    {
                         contactsDto.DisconnectTime = value;
+                    }
+                    else
+                    {
+                        contactsDto.DisconnectTime = "";
                     }
 
                     contactDtoList.Add(contactsDto);
