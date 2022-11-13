@@ -5,6 +5,7 @@ namespace Message_app_backend.Dto.Message
     public class MessageInMessageDto
     {
         public int UserId { get; set; }
+        public int UserCurrentId { get; set; }
         public string DisplayName { get; set; }
         public string MessageContent { get; set; }
         public string SendTime { get; set; }

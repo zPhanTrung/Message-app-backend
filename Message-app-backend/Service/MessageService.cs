@@ -42,7 +42,8 @@ namespace Message_app_backend.Service
                         ConnectStatus = 0,
                         RoomId = (int)message.RoomId,
                         SendTime = message.SendTime.ToString(),
-                        MessageContent = message.MessageContent
+                        MessageContent = message.MessageContent,
+                        UserCurrentId = userId
                     };
 
                     result.Add(messageInMessageDto);
